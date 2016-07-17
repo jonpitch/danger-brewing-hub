@@ -5,7 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "johnny-five": "0.9.59",
-    "raspi-io": "6.1.0"
+    "raspi-io": "6.1.0",
+    "oled-js": "4.0.2"
   },
   "devDependencies": {},
   "scripts": {

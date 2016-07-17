@@ -26,4 +26,5 @@ more detailed instructions coming soon.
 # Resources
 * [Johnny Five](http://johnny-five.io/)
 * [Raspi-IO](https://github.com/nebrius/raspi-io)
+* [oled-js](https://github.com/noopkat/oled-js)
 * [Raspberry Pi Pin Information](https://github.com/nebrius/raspi-io/wiki/Pin-Information)
