@@ -9,6 +9,9 @@ more detailed parts list coming soon.
 * [5v Power Supply](https://www.adafruit.com/product/1995)
 * [MicroSD](https://www.adafruit.com/products/2693)
 * [Raspbian Jessie](https://www.raspberrypi.org/downloads/raspbian/)
+* [Monochrome 128x32 OLED](https://www.adafruit.com/products/931)
+* [Tactile Button](https://www.adafruit.com/products/367)
+* [10K Ohm Resistor](https://www.adafruit.com/products/2784)
 
 # Setup
 more detailed instructions coming soon.
@@ -23,7 +26,16 @@ more detailed instructions coming soon.
   * `npm install`
   * `sudo node index.js`
 
+## Find i2c Address
+`i2cdetect -y 1`
+
+# Wiring Diagram
+![alt text](assets/diagram.png "Wiring Diagram")
+
+[diagram.fzz](assets/diagram.fzz)
+
 # Resources
 * [Johnny Five](http://johnny-five.io/)
 * [Raspi-IO](https://github.com/nebrius/raspi-io)
+* [oled-js](https://github.com/noopkat/oled-js)
 * [Raspberry Pi Pin Information](https://github.com/nebrius/raspi-io/wiki/Pin-Information)
