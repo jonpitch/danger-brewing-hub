@@ -6,40 +6,78 @@ var board = new five.Board({
   io: new raspi()
 });
 
+// setup display facade
+var Display = function(device) {
+  this._device = device;
+}
+
+Display.prototype = {
+  // turn display on
+  on: function() {
+    this._device.turnOnDisplay();
+  },
+
+  // turn display off
+  off: function() {
+    this._device.turnOffDisplay();
+  },
+
+  // clear display
+  clear: function() {
+    this._device.clearDisplay();
+  },
+
+  // write string to screen
+  write: function(text) {
+    this.clear();
+    this._device.setCursor(1, 1);
+    this._device.writeString(font, 1, text, 1, true, 2);
+  }
+}
+
+// setup board
 board.on('ready', function() {
   // initialize display
-  var display = new oled(board, five, {
+  var displayDevice = new oled(board, five, {
     width: 128,
     height: 32,
     address: 0x3C
   });
 
-  // clean up display - just in case
-  display.clearDisplay();
+  var display = new Display(displayDevice);
+
+  // clear display just in case
+  display._device.update();
+
+  // setup toggle
+  var currentState = 0;
+  var states = ['off', 'temp'];
+
+  var toggle = new five.Button('P1-36');
+  toggle.on('up', function() {
+    var next = currentState + 1;
+    if (next >= states.length) {
+      next = 0;
+    }
+
+    currentState = next;
+    var state = states[next];
+    if (state === 'off') {
+      display.clear();
+      display.off();
+    } else if (state === 'temp') {
+      display.on();
+      display.write('temp');
+    }
+  });
 
   // on shutdown
   this.on('exit', function() {
-    display.turnOffDisplay();
+    display.off();
   });
 
   // helpers to add to REPL
   this.repl.inject({
-    display: {
-      _hardware: display,
-      write: function(text) {
-        display.clearDisplay();
-        display.setCursor(1, 1);
-        display.writeString(font, 1, text, 1, true, 2);
-      },
-      clear: function() {
-        display.clearDisplay();
-      },
-      on: function() {
-        display.turnOnDisplay();
-      },
-      off: function() {
-        display.turnOffDisplay();
-      }
-    }
+    display: display
   });
 });
