@@ -8,10 +8,11 @@ more detailed parts list coming soon.
 * [Cobbler](https://www.adafruit.com/products/2028)
 * [5v Power Supply](https://www.adafruit.com/product/1995)
 * [MicroSD](https://www.adafruit.com/products/2693)
-* [Raspbian Jessie](https://www.raspberrypi.org/downloads/raspbian/)
 * [Monochrome 128x32 OLED](https://www.adafruit.com/products/931)
 * [Tactile Button](https://www.adafruit.com/products/367)
 * [10K Ohm Resistor](https://www.adafruit.com/products/2784)
+* [Flow Meter(s)](https://www.adafruit.com/products/828)
+* OS - [Raspbian Jessie](https://www.raspberrypi.org/downloads/raspbian/)
 
 # Setup
 more detailed instructions coming soon.
@@ -24,7 +25,8 @@ more detailed instructions coming soon.
 * install and setup `git`
 * clone repository
   * `npm install`
-  * `sudo node index.js`
+  * `npm run build`
+  * `sudo node lib/index.js`
 
 ## Find i2c Address
 `i2cdetect -y 1`
@@ -33,6 +35,10 @@ more detailed instructions coming soon.
 ![alt text](assets/diagram.png "Wiring Diagram")
 
 [diagram.fzz](assets/diagram.fzz)
+
+# Building
+* `npm run build`
+* output is `lib/index.js`
 
 # Resources
 * [Johnny Five](http://johnny-five.io/)
