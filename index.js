@@ -2,6 +2,8 @@ import raspi from 'raspi-io';
 import five from 'johnny-five';
 import oled from 'oled-js';
 import font from 'oled-font-5x7';
+import bcm from 'node-dht-sensor';
+import sensor from 'ds18x20';
 
 // setup board
 const board = new five.Board({
@@ -155,6 +157,43 @@ board.on('ready', function() {
 
   const fThree = new five.Sensor.Digital('P1-38');
   const flowMeterThree = new FlowMeter(fThree, display);
+
+  // BCM2835 sensors
+
+  // AM2302
+  const upper = {
+    initialize: function() {
+      // P1-37 = GPIO26
+      return bcm.initialize(22, 26);
+    },
+    read: function() {
+      let readout = bcm.read();
+      console.log('Upper Temperature: ' + readout.temperature.toFixed(2) + 'C, ' +
+            'humidity: ' + readout.humidity.toFixed(2) + '%');
+      setTimeout(function() {
+        upper.read();
+      }, 1000);
+    }
+  };
+
+  if (upper.initialize()) {
+    upper.read();
+  } else {
+    console.warn('Failed to initialize upper');
+  }
+
+  // DS18B20 - #19 - 28-000007c6390c
+  const lower = {
+    read: function() {
+      const temp = sensor.getAll();
+      console.log(temp);
+
+      setTimeout(function() {
+        lower.read();
+      }, 1000)
+    }
+  };
+  lower.read();
 
   // on shutdown
   // TODO notify web app event occurred
