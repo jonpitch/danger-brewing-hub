@@ -7,7 +7,9 @@
     "johnny-five": "0.9.59",
     "raspi-io": "6.1.0",
     "oled-js": "4.0.2",
-    "oled-font-5x7": "1.0.0"
+    "oled-font-5x7": "1.0.0",
+    "node-dht-sensor": "git://github.com/momenso/node-dht-sensor.git#master",
+    "ds18x20": "0.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",

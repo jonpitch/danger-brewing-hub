@@ -2,21 +2,20 @@ import raspi from 'raspi-io';
 import five from 'johnny-five';
 import oled from 'oled-js';
 import font from 'oled-font-5x7';
+import bcm from 'node-dht-sensor';
+import sensor from 'ds18x20';
 
 // setup board
 const board = new five.Board({
   io: new raspi()
 });
 
-//
 /**
 
 */
 class Display {
 
   // TODO move height, width and address of display to config
-  // TODO make display hardware optional.
-  //  if someone wants to build the hub without display, fallback to console
   constructor(board, five) {
     const hardware = new oled(board, five, {
       width: 128,
@@ -25,46 +24,7 @@ class Display {
     });
 
     this._device = hardware;
-
-    // setup toggle
-    this._currentState = 0;
-    this._states = [
-      'off',
-      'flow',
-      'temp-lower',
-      'temp-upper'
-    ];
-
-    // TODO pin is configurable
-    const toggle = new five.Button('P1-36');
-    toggle.on('up', () => {
-      let next = this._currentState + 1;
-      if (next >= this._states.length) {
-        next = 0;
-      }
-
-      if (next === 0) {
-        // display is off
-        this.clear();
-        this.off();
-
-      } else if (next === 1) {
-        // display set to flow meters
-        this.on();
-        this.write('temp');
-
-      } else if (next === 2) {
-        // display set to lower temperature
-        this.write('lower');
-
-      } else if (next === 3) {
-        // display set to upper temperature
-        this.write('upper');
-
-      }
-
-      this._currentState = next;
-    });
+    this._on = false;
 
     // clear display on initialization - just in case
     this._device.update();
@@ -73,11 +33,13 @@ class Display {
   // trun display on
   on() {
     this._device.turnOnDisplay();
+    this._on = true;
   }
 
   // turn display off
   off() {
     this._device.turnOffDisplay();
+    this._on = false;
   }
 
   // clear display
@@ -92,32 +54,51 @@ class Display {
     this._device.writeString(font, 1, text, 1, true, 2);
   }
 
+  // is the display on
+  getIsOn() {
+    return this._on;
+  }
+}
+
+/**
+  All hub sensors implement - used for logging
+*/
+class HubSensor {
+
+  constructor() {
+  }
+
+  // report data
+  report(info) {
+    console.log(info);
+  }
 }
 
 /*
 
 */
-class FlowMeter {
+class FlowMeter extends HubSensor {
 
-  constructor(device, display) {
-    this._device = device;
+  constructor(id, fiveSensor, display = null) {
+    super();
+    this._sensor = fiveSensor;
     this._display = display;
 
     // total pulses from flow meter
-    var pulses = 0;
+    let pulses = 0;
 
     // pulses per session - gets reset
-    var sessionPulses = 0;
+    let sessionPulses = 0;
 
     // state of flow meter
-    var isOpen = false;
+    let isOpen = false;
 
     // may require calibration
     const pulsesPerLiter = 450;
     const ouncesPerLiter = 33.814;
     const pulsesPerOunce = 13.308;
 
-    this._device.on('change', () => {
+    this._sensor.on('change', () => {
       pulses++;
       sessionPulses++;
       isOpen = true;
@@ -126,16 +107,114 @@ class FlowMeter {
       setTimeout(() => {
         if (currentSession === sessionPulses) {
           const ounces = Math.round((sessionPulses / pulsesPerOunce) * 100) / 100;
-          this._display.write(`poured: ${ounces} oz`);
+          const message = `${id} poured: ${ounces} oz`;
+          super.report(message);
 
-          // reset
+          // write to display
+          if (this._display && this._display.getIsOn()) {
+            this._display.write(message);
+            setTimeout(() => {
+              this._display.clear();
+            }, 500);
+          }
+
+          // reset session
           sessionPulses = 0;
           isOpen = false;
-          setTimeout(() => {
-            this._display.clear();
-          }, 500);
         }
       }, 1000);
+    });
+  }
+}
+
+/**
+  DS18B20 Temperature Sensor
+*/
+class Ds18b20 extends HubSensor {
+
+  constructor(id, interval) {
+    super();
+    this._id = id;
+    this._interval = interval;
+
+    // start
+    this.probe();
+  }
+
+  // read temperatures every interval
+  probe() {
+    const temperatures = sensor.getAll();
+    const temperature = temperatures[this._id];
+    super.report(`${this._id}: ${temperature}°C`);
+
+    setTimeout(() => {
+      this.probe();
+    }, this._interval);
+  }
+}
+
+/**
+  AM2302 Temperature/Humidity Sensor
+*/
+class Am2302 extends HubSensor {
+
+  constructor(pin, interval) {
+    super();
+    this._pin = pin;
+    this._interval = interval;
+
+    // start
+    if (bcm.initialize(22, this._pin)) {
+      this.probe();
+    }
+  }
+
+  // read temperature and humidity at interval
+  probe() {
+    const reading = bcm.read();
+    const temp = reading.temperature.toFixed(2);
+    const humidity = reading.humidity.toFixed(2);
+
+    super.report(`${this._pin}: ${temp}°C ${humidity}%`);
+    setTimeout(() => {
+      this.probe();
+    }, this._interval);
+  }
+}
+
+/**
+  Activate sensor to write to display
+*/
+class DisplayToggle {
+
+  constructor(pin, display) {
+    this._toggle = new five.Button(pin);
+    this._display = display;
+
+    // reset display
+    this._display.clear();
+    this._display.off();
+
+    // handle toggle
+    this._toggle.on('up', () => {
+      if (this._display.getIsOn()) {
+        // turn off display
+        // TODO randomize
+        this._display.write('goodbye');
+        setTimeout(() => {
+          this._display.clear();
+          this._display.off();
+        }, 1000);
+      } else {
+        // turn on display
+        this._display.on();
+
+        // TODO randomize
+        this._display.write('greetings');
+        setTimeout(() => {
+          this._display.clear();
+        }, 1000);
+      }
     });
   }
 }
@@ -145,10 +224,32 @@ board.on('ready', function() {
   // initialize display
   const display = new Display(board, five);
 
-  // setup flow meter
+  // setup flow meter(s)
   // TODO dynamic from configuration?
-  const f = new five.Sensor.Digital('P1-22');
-  const meter = new FlowMeter(f, display);
+  const flowMeters = [{
+    id: 1,
+    pin: 'P1-22'
+  }, {
+    id: 2,
+    pin: 'P1-18'
+  }, {
+    id: 3,
+    pin: 'P1-38'
+  }];
+
+  flowMeters.forEach((fm) => {
+    const f = new five.Sensor.Digital(fm.pin);
+    const flow = new FlowMeter(fm.id, f, display);
+  });
+
+  // upper temperature sensor
+  const upper = new Am2302(26, 5000);
+
+  // lower temperature sensor
+  const lower = new Ds18b20('28-000007c6390c', 5000);
+
+  // setup display toggle
+  const toggle = new DisplayToggle('P1-36', display);
 
   // on shutdown
   // TODO notify web app event occurred
