@@ -24,6 +24,7 @@ class Display {
     });
 
     this._device = hardware;
+    this._on = false;
 
     // clear display on initialization - just in case
     this._device.update();
@@ -32,11 +33,13 @@ class Display {
   // trun display on
   on() {
     this._device.turnOnDisplay();
+    this._on = true;
   }
 
   // turn display off
   off() {
     this._device.turnOffDisplay();
+    this._on = false;
   }
 
   // clear display
@@ -51,6 +54,10 @@ class Display {
     this._device.writeString(font, 1, text, 1, true, 2);
   }
 
+  // is the display on
+  getIsOn() {
+    return this._on;
+  }
 }
 
 /**
@@ -58,16 +65,11 @@ class Display {
 */
 class HubSensor {
 
-  constructor(display = null) {
-    this._display = display;
+  constructor() {
   }
 
   // report data
   report(info) {
-    if (this._display) {
-      this._display.write(info);
-    }
-
     console.log(info);
   }
 }
@@ -78,8 +80,9 @@ class HubSensor {
 class FlowMeter extends HubSensor {
 
   constructor(id, fiveSensor, display = null) {
-    super(display);
+    super();
     this._sensor = fiveSensor;
+    this._display = display;
 
     // total pulses from flow meter
     let pulses = 0;
@@ -104,7 +107,16 @@ class FlowMeter extends HubSensor {
       setTimeout(() => {
         if (currentSession === sessionPulses) {
           const ounces = Math.round((sessionPulses / pulsesPerOunce) * 100) / 100;
-          super.report(`${id} poured: ${ounces} oz`);
+          const message = `${id} poured: ${ounces} oz`;
+          super.report(message);
+
+          // write to display
+          if (this._display && this._display.getIsOn()) {
+            this._display.write(message);
+            setTimeout(() => {
+              this._display.clear();
+            }, 500);
+          }
 
           // reset session
           sessionPulses = 0;
@@ -120,8 +132,8 @@ class FlowMeter extends HubSensor {
 */
 class Ds18b20 extends HubSensor {
 
-  constructor(id, interval, display = null) {
-    super(display);
+  constructor(id, interval) {
+    super();
     this._id = id;
     this._interval = interval;
 
@@ -146,8 +158,8 @@ class Ds18b20 extends HubSensor {
 */
 class Am2302 extends HubSensor {
 
-  constructor(pin, interval, display = null) {
-    super(display);
+  constructor(pin, interval) {
+    super();
     this._pin = pin;
     this._interval = interval;
 
@@ -167,6 +179,43 @@ class Am2302 extends HubSensor {
     setTimeout(() => {
       this.probe();
     }, this._interval);
+  }
+}
+
+/**
+  Activate sensor to write to display
+*/
+class DisplayToggle {
+
+  constructor(pin, display) {
+    this._toggle = new five.Button(pin);
+    this._display = display;
+
+    // reset display
+    this._display.clear();
+    this._display.off();
+
+    // handle toggle
+    this._toggle.on('up', () => {
+      if (this._display.getIsOn()) {
+        // turn off display
+        // TODO randomize
+        this._display.write('goodbye');
+        setTimeout(() => {
+          this._display.clear();
+          this._display.off();
+        }, 1000);
+      } else {
+        // turn on display
+        this._display.on();
+
+        // TODO randomize
+        this._display.write('greetings');
+        setTimeout(() => {
+          this._display.clear();
+        }, 1000);
+      }
+    });
   }
 }
 
@@ -190,14 +239,17 @@ board.on('ready', function() {
 
   flowMeters.forEach((fm) => {
     const f = new five.Sensor.Digital(fm.pin);
-    const flow = new FlowMeter(fm.id, f, null);
+    const flow = new FlowMeter(fm.id, f, display);
   });
 
   // upper temperature sensor
-  const upper = new Am2302(26, 1000, null);
+  const upper = new Am2302(26, 5000);
 
   // lower temperature sensor
-  const lower = new Ds18b20('28-000007c6390c', 1000, null);
+  const lower = new Ds18b20('28-000007c6390c', 5000);
+
+  // setup display toggle
+  const toggle = new DisplayToggle('P1-36', display);
 
   // on shutdown
   // TODO notify web app event occurred
