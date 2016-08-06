@@ -147,8 +147,14 @@ board.on('ready', function() {
 
   // setup flow meter
   // TODO dynamic from configuration?
-  const f = new five.Sensor.Digital('P1-22');
-  const meter = new FlowMeter(f, display);
+  const fOne = new five.Sensor.Digital('P1-22');
+  const flowMeterOne = new FlowMeter(fOne, display);
+
+  const fTwo = new five.Sensor.Digital('P1-18');
+  const flowMeterTwo = new FlowMeter(fTwo, display);
+
+  const fThree = new five.Sensor.Digital('P1-38');
+  const flowMeterThree = new FlowMeter(fThree, display);
 
   // on shutdown
   // TODO notify web app event occurred
