@@ -30,6 +30,15 @@ more detailed instructions coming soon.
   * `npm run build`
   * `sudo node lib/index.js`
 
+## Configuration
+configuration is done through [node-config](https://github.com/lorenwest/node-config).
+
+```
+mv /config/default.example.json /config/default.json
+```
+
+Edit `default.json` to your needs. More details coming soon.
+
 ## Find i2c Address
 `i2cdetect -y 1`
 
