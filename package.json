@@ -10,7 +10,8 @@
     "oled-font-5x7": "1.0.0",
     "node-dht-sensor": "git://github.com/momenso/node-dht-sensor.git#master",
     "ds18x20": "0.2.0",
-    "config": "1.21.0"
+    "config": "1.21.0",
+    "firebase": "3.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",

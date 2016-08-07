@@ -1,4 +1,11 @@
 {
+  "firebase": {
+    "apiKey": "apiKey",
+    "authDomain": "projectId.firebaseapp.com",
+    "databaseURL": "https://databaseName.firebaseio.com",
+    "storageBucket": "bucket.appspot.com",
+    "serviceAccountPath": "config/service-account.json"
+  },
   "hub": {
     "id": "-xyz1234",
     "taps": [

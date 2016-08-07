@@ -5,6 +5,7 @@ import font from 'oled-font-5x7';
 import bcm from 'node-dht-sensor';
 import sensor from 'ds18x20';
 import config from 'config';
+import firebase from 'firebase';
 
 // setup board
 const board = new five.Board({
@@ -165,6 +166,11 @@ class Ds18b20 extends HubSensor {
     const temperature = temperatures[this._id];
     super.report(`${this._id}: ${temperature}°C`);
 
+    // report to firebase
+    // TODO remove hub id - add sensors as relationship
+    const hubId = config.get('hub.id');
+    firebase.database().ref(`hubs/${hubId}/lowerTemp`).set(temperature);
+
     setTimeout(() => {
       this.probe();
     }, this._interval);
@@ -194,6 +200,13 @@ class Am2302 extends HubSensor {
     const humidity = reading.humidity.toFixed(2);
 
     super.report(`${this._pin}: ${temp}°C ${humidity}%`);
+
+    // report to firebase
+    // TODO remove hub id - add sensors as relationship
+    const hubId = config.get('hub.id');
+    firebase.database().ref(`hubs/${hubId}/upperTemp`).set(temp);
+    firebase.database().ref(`hubs/${hubId}/humidity`).set(humidity);
+
     setTimeout(() => {
       this.probe();
     }, this._interval);
@@ -242,44 +255,73 @@ board.on('ready', function() {
   // initialize display
   const display = new Display(board, five);
 
-  // setup flow meter(s)
-  const taps = config.get('hub.taps');
-  taps.forEach((tap) => {
-    const f = new five.Sensor.Digital(tap.pin);
-    const flow = new FlowMeter(tap.id, f, display);
-  });
+  let hubId;
+  if (config.has('hub.id')) {
+    hubId = config.get('hub.id');
 
-  if (taps.length === 0) {
-    console.log('no taps found, skipping');
-  }
+    // setup firebase
+    let fb;
+    if (config.has('firebase') && hubId) {
+      const firebaseConfig = config.get('firebase');
+      firebase.initializeApp({
+        apiKey: firebaseConfig.get('apiKey'),
+        authDomain: firebaseConfig.get('authDomain'),
+        databaseURL: firebaseConfig.get('databaseURL'),
+        storageBucket: firebaseConfig.get('storageBucket'),
+        serviceAccount: firebaseConfig.get('serviceAccountPath')
+      });
 
-  // upper temperature sensor
-  if (config.has('hardware.temperature.am2302')) {
-    const am2302 = config.get('hardware.temperature.am2302');
-    const upper = new Am2302(am2302.pin, am2302.polling);
+      // notify web that hub is online
+      firebase.database().ref(`hubs/${hubId}/status`).set('online');
+
+      // setup flow meter(s)
+      const taps = config.get('hub.taps');
+      taps.forEach((tap) => {
+        const f = new five.Sensor.Digital(tap.pin);
+        const flow = new FlowMeter(tap.id, f, display);
+      });
+
+      if (taps.length === 0) {
+        console.error('no taps found, skipping');
+      }
+
+      // upper temperature sensor
+      if (config.has('hardware.temperature.am2302')) {
+        const am2302 = config.get('hardware.temperature.am2302');
+        const upper = new Am2302(am2302.pin, am2302.polling);
+      } else {
+        console.info('no am2302 sensor found, skipping');
+      }
+
+      // lower temperature sensor
+      if (config.has('hardware.temperature.ds18b20')) {
+        const ds18b20 = config.get('hardware.temperature.ds18b20');
+        const lower = new Ds18b20(ds18b20.address, ds18b20.polling);
+      } else {
+        console.info('no ds18b20 sensor found, skipping');
+      }
+
+      // setup display toggle
+      if (config.has('hardware.display.toggle')) {
+        const toggle = config.get('hardware.display.toggle');
+        const displayToggle = new DisplayToggle(toggle, display);
+      } else {
+        console.log('no display toggle found, skipping');
+      }
+    } else {
+      console.error('no firebase config found');
+    }
+
   } else {
-    console.info('no am2302 sensor found, skipping');
-  }
-
-  // lower temperature sensor
-  if (config.has('hardware.temperature.ds18b20')) {
-    const ds18b20 = config.get('hardware.temperature.ds18b20');
-    const lower = new Ds18b20(ds18b20.address, ds18b20.polling);
-  } else {
-    console.info('no ds18b20 sensor found, skipping');
-  }
-
-  // setup display toggle
-  if (config.has('hardware.display.toggle')) {
-    const toggle = config.get('hardware.display.toggle');
-    const displayToggle = new DisplayToggle(toggle, display);
-  } else {
-    console.log('no display toggle found, skipping');
+    console.error('no hub id found');
   }
 
   // on shutdown
-  // TODO notify web app event occurred
   this.on('exit', function() {
+    // notify application
+    firebase.database().ref(`hubs/${hubId}/status`).set('offline');
+
+    // turn off display hardware
     display.off();
   });
 
