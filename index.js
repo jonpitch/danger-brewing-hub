@@ -4,6 +4,7 @@ import oled from 'oled-js';
 import font from 'oled-font-5x7';
 import bcm from 'node-dht-sensor';
 import sensor from 'ds18x20';
+import config from 'config';
 
 // setup board
 const board = new five.Board({
@@ -15,43 +16,60 @@ const board = new five.Board({
 */
 class Display {
 
-  // TODO move height, width and address of display to config
+  // setup oled display if available - fallback to console
   constructor(board, five) {
-    const hardware = new oled(board, five, {
-      width: 128,
-      height: 32,
-      address: 0x3C
-    });
+    let hardware = null;
+    if (config.get('hardware.display.oled')) {
+      let address = config.get('hardware.display.oled.address');
+      hardware = new oled(board, five, {
+        width: config.get('hardware.display.oled.w'),
+        height: config.get('hardware.display.oled.h'),
+        address: parseInt(address, 16)
+      });
 
-    this._device = hardware;
+      this._device = hardware;
+
+      // clear display on initialization - just in case
+      this._device.update();
+    } else {
+      console.log('no oled device found, skipping');
+    }
+
     this._on = false;
-
-    // clear display on initialization - just in case
-    this._device.update();
   }
 
   // trun display on
   on() {
-    this._device.turnOnDisplay();
     this._on = true;
+    if (this._device) {
+      this._device.turnOnDisplay();
+    }
   }
 
   // turn display off
   off() {
-    this._device.turnOffDisplay();
     this._on = false;
+    if (this._device) {
+      this._device.turnOffDisplay();
+    }
   }
 
   // clear display
   clear() {
-    this._device.clearDisplay();
+    if (this._device) {
+      this._device.clearDisplay();
+    }
   }
 
   // write string to screen
   write(text) {
     this.clear();
-    this._device.setCursor(1, 1);
-    this._device.writeString(font, 1, text, 1, true, 2);
+    if (this._device) {
+      this._device.setCursor(1, 1);
+      this._device.writeString(font, 1, text, 1, true, 2);
+    } else {
+      console.log(text);
+    }
   }
 
   // is the display on
@@ -225,31 +243,39 @@ board.on('ready', function() {
   const display = new Display(board, five);
 
   // setup flow meter(s)
-  // TODO dynamic from configuration?
-  const flowMeters = [{
-    id: 1,
-    pin: 'P1-22'
-  }, {
-    id: 2,
-    pin: 'P1-18'
-  }, {
-    id: 3,
-    pin: 'P1-38'
-  }];
-
-  flowMeters.forEach((fm) => {
-    const f = new five.Sensor.Digital(fm.pin);
-    const flow = new FlowMeter(fm.id, f, display);
+  const taps = config.get('hub.taps');
+  taps.forEach((tap) => {
+    const f = new five.Sensor.Digital(tap.pin);
+    const flow = new FlowMeter(tap.id, f, display);
   });
 
+  if (taps.length === 0) {
+    console.log('no taps found, skipping');
+  }
+
   // upper temperature sensor
-  const upper = new Am2302(26, 5000);
+  if (config.has('hardware.temperature.am2302')) {
+    const am2302 = config.get('hardware.temperature.am2302');
+    const upper = new Am2302(am2302.pin, am2302.polling);
+  } else {
+    console.info('no am2302 sensor found, skipping');
+  }
 
   // lower temperature sensor
-  const lower = new Ds18b20('28-000007c6390c', 5000);
+  if (config.has('hardware.temperature.ds18b20')) {
+    const ds18b20 = config.get('hardware.temperature.ds18b20');
+    const lower = new Ds18b20(ds18b20.address, ds18b20.polling);
+  } else {
+    console.info('no ds18b20 sensor found, skipping');
+  }
 
   // setup display toggle
-  const toggle = new DisplayToggle('P1-36', display);
+  if (config.has('hardware.display.toggle')) {
+    const toggle = config.get('hardware.display.toggle');
+    const displayToggle = new DisplayToggle(toggle, display);
+  } else {
+    console.log('no display toggle found, skipping');
+  }
 
   // on shutdown
   // TODO notify web app event occurred
