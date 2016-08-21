@@ -1,6 +1,5 @@
 import HubSensor from 'sensors/hub-sensor';
 import bcm from 'node-dht-sensor';
-import config from 'config';
 
 /**
   AM2302 Temperature/Humidity Sensor
@@ -9,6 +8,7 @@ export default class Am2302 extends HubSensor {
 
   constructor(firebase, id, pin, interval) {
     super();
+    this._firebase = firebase;
     this._id = id;
     this._pin = pin;
     this._interval = interval;
@@ -25,14 +25,14 @@ export default class Am2302 extends HubSensor {
     const temp = reading.temperature.toFixed(2);
     const humidity = reading.humidity.toFixed(2);
 
+    // log
     super.report(`${this._pin}: ${temp}°C ${humidity}%`);
 
     // report to firebase
-    const hubId = config.get('hub.id');
-    // firebase.database().ref(`hubs/${hubId}`).set({
-    //   upperTemp: temp,
-    //   humidity: humidity
-    // });
+    this._firebase.database().ref(`sensors/${this._id}`).update({
+      temperature: temp,
+      humidity: humidity
+    });
 
     setTimeout(() => {
       this.probe();

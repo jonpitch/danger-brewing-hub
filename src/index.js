@@ -20,6 +20,13 @@ const board = new five.Board({
 // display - optional
 let display = null;
 
+// firebase hub id
+let hubId = null;
+
+// hardware
+let sensors = [];
+let taps = [];
+
 // setup hub
 board.on('ready', function() {
 
@@ -40,7 +47,7 @@ board.on('ready', function() {
   });
 
   if (requiredMet.indexOf(false) === -1) {
-    const hubId = config.get('hub.id');
+    hubId = config.get('hub.id');
     const firebaseConfig = config.get('firebase');
 
     // initialize firebase
@@ -74,7 +81,6 @@ board.on('ready', function() {
     }
 
     // setup sensors - optional
-    let sensors = [];
     if (config.has('hub.sensors')) {
       const sensorConfig = config.get('hub.sensors');
       sensorConfig.forEach((s) => {
@@ -97,7 +103,6 @@ board.on('ready', function() {
     console.log(`${sensors.length} sensors configured.`);
 
     // setup flow meters - technically optional
-    let taps = [];
     if (config.has('hub.taps')) {
       const tapConfig = config.get('hub.taps');
       tapConfig.forEach((t) => {
@@ -112,7 +117,7 @@ board.on('ready', function() {
     console.info(`${taps.length} taps configured.`);
 
     // set hub to online
-    // firebase.database().ref(`hubs/${hubId}/status`).set('online');
+    firebase.database().ref(`hubs/${hubId}/status`).set('online');
 
   } else {
     console.error('hub is not configured correctly.');
@@ -122,7 +127,9 @@ board.on('ready', function() {
   // on shutdown
   this.on('exit', function() {
     // notify application
-    // firebase.database().ref(`hubs/${hubId}/status`).set('offline');
+    if (firebase && hubId) {
+      firebase.database().ref(`hubs/${hubId}/status`).set('offline');
+    }
 
     // turn off display hardware
     if (display) {
