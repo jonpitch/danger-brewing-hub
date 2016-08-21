@@ -1,0 +1,47 @@
+{
+  "firebase": {
+    "apiKey": "apiKey",
+    "authDomain": "projectId.firebaseapp.com",
+    "databaseURL": "https://databaseName.firebaseio.com",
+    "storageBucket": "bucket.appspot.com",
+    "serviceAccountPath": "config/service-account.json"
+  },
+  "hub": {
+    "id": "-xyz1234",
+    "taps": [
+      {
+        "id": "-Ka9234aldf",
+        "pin": "P1-22"
+      },
+      {
+        "id": "-XyUUIOWER1",
+        "pin": "P1-18"
+      },
+      {
+        "id": "-90124KLAOQ",
+        "pin": "P1-38"
+      }
+    ],
+    "sensors": [
+      {
+        "type": "am2302",
+        "id": "-abcdefg",
+        "pin": 26,
+        "polling": 5000
+      },
+      {
+        "type": "ds18b20",
+        "id": "-zyxwvut",
+        "address": "28-000007c6390c",
+        "polling": 5000
+      }
+    ],
+    "display": {
+      "type": "ssd1306",
+      "w": 128,
+      "h": 32,
+      "address": "0x3C",
+      "toggle": "P1-36"
+    }
+  }
+}

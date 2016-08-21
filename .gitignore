@@ -1,2 +1,4 @@
 /node_modules
+/config/default.json
+/config/service-account.json
 .DS_Store
