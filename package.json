@@ -19,7 +19,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel index.js --presets es2015 --out-file lib/index.js --source-maps inline"
+    "build": "babel src --presets es2015 --out-dir lib --source-maps inline"
   },
   "repository": {
     "type": "git",

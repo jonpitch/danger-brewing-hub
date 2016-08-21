@@ -21,26 +21,27 @@
         "id": "-90124KLAOQ",
         "pin": "P1-38"
       }
-    ]
-  },
-  "hardware": {
-    "display": {
-      "oled": {
-        "w": 128,
-        "h": 32,
-        "address": "0x3C"
-      },
-      "toggle": "P1-36"
-    },
-    "temperature": {
-      "ds18b20": {
-        "address": "28-000007c6390c",
-        "polling": 5000
-      },
-      "am2302": {
+    ],
+    "sensors": [
+      {
+        "type": "am2302",
+        "id": "-abcdefg",
         "pin": 26,
         "polling": 5000
+      },
+      {
+        "type": "ds18b20",
+        "id": "-zyxwvut",
+        "address": "28-000007c6390c",
+        "polling": 5000
       }
+    ],
+    "display": {
+      "type": "ssd1306",
+      "w": 128,
+      "h": 32,
+      "address": "0x3C",
+      "toggle": "P1-36"
     }
   }
 }

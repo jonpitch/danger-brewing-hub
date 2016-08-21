@@ -78,7 +78,9 @@ sudo modprobe w1-therm strong_pullup=1
 
 # Building
 * `npm run build`
-* output is `lib/index.js`
+
+# Running
+* `./run.sh`
 
 # Resources
 * [Johnny Five](http://johnny-five.io/)
