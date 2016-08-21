@@ -9,22 +9,17 @@ export default class Ssd1306 {
 
   // setup oled display if available - fallback to console
   constructor(board, five) {
-    let hardware = null;
-    if (config.get('hardware.display.oled')) {
-      let address = config.get('hardware.display.oled.address');
-      hardware = new oled(board, five, {
-        width: config.get('hardware.display.oled.w'),
-        height: config.get('hardware.display.oled.h'),
-        address: parseInt(address, 16)
-      });
+    let address = config.get('hub.display.address');
+    const hardware = new oled(board, five, {
+      width: config.get('hub.display.w'),
+      height: config.get('hub.display.h'),
+      address: parseInt(address, 16)
+    });
 
-      this._device = hardware;
+    this._device = hardware;
 
-      // clear display on initialization - just in case
-      this._device.update();
-    } else {
-      console.log('no oled device found, skipping');
-    }
+    // clear display on initialization - just in case
+    this._device.update();
 
     this._on = false;
   }

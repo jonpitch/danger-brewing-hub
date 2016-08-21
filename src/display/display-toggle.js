@@ -3,7 +3,7 @@
 */
 export default class DisplayToggle {
 
-  constructor(pin, display) {
+  constructor(five, pin, display) {
     this._toggle = new five.Button(pin);
     this._display = display;
 

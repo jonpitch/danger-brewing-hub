@@ -4,18 +4,21 @@ import config from 'config';
 import firebase from 'firebase';
 
 // supported displays
-import Ssd1306 from '../display/ssd1306';
-import DisplayToggle from '../display/display-toggle';
+import Ssd1306 from 'display/ssd1306';
+import DisplayToggle from 'display/display-toggle';
 
 // supported sensors
-import Am2302 from '../sensors/am2302';
-import Ds18b20 from '../sensors/ds18b20';
-import FlowMeter from '../sensors/flow-meter';
+import Am2302 from 'sensors/am2302';
+import Ds18b20 from 'sensors/ds18b20';
+import FlowMeter from 'sensors/flow-meter';
 
 // setup board
 const board = new five.Board({
   io: new raspi()
 });
+
+// display - optional
+let display = null;
 
 // setup hub
 board.on('ready', function() {
@@ -28,7 +31,7 @@ board.on('ready', function() {
     'firebase.authDomain',
     'firebase.databaseURL',
     'firebase.storageBucket',
-    'firebase.serviceAccount'
+    'firebase.serviceAccountPath'
   ];
 
   // check if all keys set
@@ -50,7 +53,6 @@ board.on('ready', function() {
     });
 
     // setup display - optional
-    let display = null;
     if (config.has('hub.display') && config.has('hub.display.type')) {
       const type = config.get('hub.display.type');
       if (type === 'ssd1306') {
@@ -65,8 +67,8 @@ board.on('ready', function() {
     // setup display toggle - optional
     let displayToggle = null;
     if (display && config.has('hub.display.toggle')) {
-      const toggle = config.get('hub.display.toggle');
-      displayToggle = new DisplayToggle(toggle, display);
+      const togglePin = config.get('hub.display.toggle');
+      displayToggle = new DisplayToggle(five, togglePin, display);
     } else {
       console.warn('no display toggle configured.');
     }
@@ -78,11 +80,11 @@ board.on('ready', function() {
       sensorConfig.forEach((s) => {
         if (s.type === 'am2302') {
           // am2302 temperature sensor
-          sensors.push(new Am2302(firebase, s.pin, s.polling));
+          sensors.push(new Am2302(firebase, s.id, s.pin, s.polling));
 
         } else if (s.type === 'ds18b20') {
           // ds18b20 temperature sensor
-          sensors.push(new Ds18b20(firebase, ds18b20.address, ds18b20.polling));
+          sensors.push(new Ds18b20(firebase, s.id, s.address, s.polling));
 
         } else {
           console.error(`unsupported sensor type: ${s.type}.`);
@@ -101,6 +103,7 @@ board.on('ready', function() {
       tapConfig.forEach((t) => {
         const f = new five.Sensor.Digital(t.pin);
         const flow = new FlowMeter(firebase, t.id, f, display);
+        taps.push(flow);
       });
     } else {
       console.warn('no tap configuration found.');

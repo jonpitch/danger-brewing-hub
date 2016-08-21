@@ -1,4 +1,4 @@
-import HubSensor from 'hub-sensor';
+import HubSensor from 'sensors/hub-sensor';
 import bcm from 'node-dht-sensor';
 import config from 'config';
 
@@ -7,8 +7,9 @@ import config from 'config';
 */
 export default class Am2302 extends HubSensor {
 
-  constructor(firebase, pin, interval) {
+  constructor(firebase, id, pin, interval) {
     super();
+    this._id = id;
     this._pin = pin;
     this._interval = interval;
 

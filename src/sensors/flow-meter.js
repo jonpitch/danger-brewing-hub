@@ -1,4 +1,4 @@
-import HubSensor from 'hub-sensor';
+import HubSensor from 'sensors/hub-sensor';
 
 /*
 
