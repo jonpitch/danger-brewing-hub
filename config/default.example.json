@@ -41,7 +41,19 @@
       "w": 128,
       "h": 32,
       "address": "0x3C",
-      "toggle": "P1-36"
+      "toggle": "P1-36",
+      "greetings": [
+        "hello",
+        "how's it going?",
+        "you look nice today",
+        "what up"
+      ],
+      "goodbyes": [
+        "have a good day",
+        "goodbye",
+        "until next time",
+        "take care"
+      ]
     }
   }
 }
