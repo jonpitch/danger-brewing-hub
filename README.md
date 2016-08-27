@@ -43,23 +43,38 @@ It supports collecting data from:
   * Put Raspian on your SD card. Follow instructions [here](https://www.raspberrypi.org/documentation/installation/installing-images/README.md)
 * Opearting System Configuration
   * Initially, you will need an external display and keyboard. Get those, plug in and power on the pi.
-    * **TODO** When your pi boots up, log in with `pi`, password: `raspberry`
-  * type `raspi-config`
-    * Enable SSH
-    * Expand the file system
-    * Set your locale
-    * Set your timezone
+    * When your pi boots up, log in with:
+      * username: `pi`
+      * password: `raspberry` (we'll change this later)
+  * Type `sudo raspi-config`
+    * Expand file system
+    * Internationalization options - adjust as necessary.
     * Change your password - if you want
+    * `Advanced Options - Hostname` - chane the hostname of your Pi (optional)
+    * `Advanced Options - Enable I2C`
+    * `Advanced Options - Enable One-Wire`
+    * `Advanced Options - Enable SSH`
+    * Reboot
+  * Setup Wifi
+    * Follow the instructions [here](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md)
+      * You can now ditch your keyboard and display.
+      * `sudo reboot`
+      * Find the IP address of your Pi on your network
+      * `ssh pi@192.168.x.x`
+      * Enter password: `raspberry`
+  * Install updates
+    * `sudo apt-get update`
+    * `sudo apt-get upgrade`
   * Install `node`
+    * `cd /tmp`
     * `wget http://node-arm.herokuapp.com/node_latest_armhf.deb`
     * `sudo dpkg -i node_latest_armhf.deb`
-  * Setup `git`
+  * Install `git`
     * `sudo apt-get install git`
-    * **TODO** config git, necessary?
 * Danger Brewing Configuration
   * Support for `BCM2835` one-wire sensor:
     * `cd /tmp`
-    * `wget http://www.open.com.au/mikem/bcm2835/bcm2835-1.49.tar.gz`
+    * `wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.50.tar.gz`
     * `tar xvfz bcm2835-1.49.tar.gz`
     * `cd bcm2835-1.49/`
     * `./configure`
@@ -80,16 +95,17 @@ It supports collecting data from:
   * Follow the directions found [here](https://github.com/jonpitch/danger-brewing#configuration)
 * Setup `Service Account`
   * Follow the instructions [here](https://firebase.google.com/docs/server/setup)
-  * Hold on to the `.json` file you receive for the next step
-* Build the application
+  * Hold on to this `.json` file.
+* Get the Code
   * `cd /home/pi`
-  * `git clone <this repository>`
+  * `git clone https://github.com/jonpitch/danger-brewing-hub.git`
   * `cd /danger-brewing-hub`
   * `npm install`
-  * `npm run build`
-  * `cp <your service account json file> config/service-account.json`
+  * reboot your pi: `sudo reboot`
 * Setup your configuration
-  * `cp /config/default.example.json /config/default.json`
+  * From your computer:
+    `scp <your service account .json file> pi@192.168.x.x:/home/pi/danger-brewing-hub/config/service-account.json`
+  * From the pi: `cp /config/default.example.json /config/default.json`
   * Update `firebase` `ENV` values with your own.
   * Update `hub.id` with your hub id from Firebase.
   * Configure taps:
@@ -122,22 +138,27 @@ It supports collecting data from:
       * If you need help understanding the output, try [here](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c#testing-i2c)
     * `toggle`: This should be your toggle's [pin](https://github.com/nebrius/raspi-io/wiki/Pin-Information).
     * If you're feeling crazy, `greetings` and `goodbyes` are messages to display at random when you turn on or off your display. *tip: keep them short*.
+  * Run the hub
+    * `cd /home/pi/danger-brewing-hub`
+    * `./run.sh`
+  * Checking for updates
+    * `cd /home/pi/danger-brewing-hub`
+    * `git pull`
 
-## Building Source
+## Developers
+
+#### Building
 * `npm run build`
 
 *Output is in `/lib`*
 
-## Running
+#### Running
 * `./run.sh`
 
-#### Run On Boot
-**TODO**
-
-## Contributing
+#### Contributing
 * Feel free to help out. Take a look if there are any open [issues](https://github.com/jonpitch/danger-brewing-hub/issues), bugs or if you want to just make the danger-brewing-hub better, go for it!
 
-## Additional Resources
+#### Additional Resources
 * [Johnny Five](http://johnny-five.io/)
 * [Raspi-IO](https://github.com/nebrius/raspi-io)
 * [oled-js](https://github.com/noopkat/oled-js)
