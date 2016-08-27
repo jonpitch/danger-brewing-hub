@@ -1,6 +1,6 @@
 {
   "name": "danger-brewing-hub",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "a nodebot kegerator",
   "main": "index.js",
   "dependencies": {
