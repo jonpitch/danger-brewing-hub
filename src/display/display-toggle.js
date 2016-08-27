@@ -39,7 +39,7 @@ export default class DisplayToggle {
 
   // display a random greeting when turning on the display
   randomGreeting() {
-    if (config.has('display.greetings')) {
+    if (config.has('hub.display.greetings')) {
       const greetings = config.get('display.greetings');
       return greetings[Math.floor(Math.random() * greetings.length)];
     }
@@ -49,7 +49,7 @@ export default class DisplayToggle {
 
   // display a random goodbye when turning off the display
   randomGoodbye() {
-    if (config.has('display.goodbyes')) {
+    if (config.has('hub.display.goodbyes')) {
       const goodbyes = config.get('goodbyes');
       return goodbyes[Math.floor(Math.random() * goodbyes.length)];
     }
