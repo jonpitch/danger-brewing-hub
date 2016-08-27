@@ -1,3 +1,5 @@
+import config from 'config';
+
 /**
   Activate sensor to write to display
 */
@@ -14,9 +16,9 @@ export default class DisplayToggle {
     // handle toggle
     this._toggle.on('up', () => {
       if (this._display.getIsOn()) {
-        // turn off display
-        // TODO randomize
-        this._display.write('goodbye');
+        // say goodbye and turn off display
+        const goodbye = this.randomGoodbye();
+        this._display.write(goodbye);
         setTimeout(() => {
           this._display.clear();
           this._display.off();
@@ -25,12 +27,33 @@ export default class DisplayToggle {
         // turn on display
         this._display.on();
 
-        // TODO randomize
-        this._display.write('greetings');
+        // say hello
+        const hello = this.randomGreeting();
+        this._display.write(hello);
         setTimeout(() => {
           this._display.clear();
         }, 1000);
       }
     });
+  }
+
+  // display a random greeting when turning on the display
+  randomGreeting() {
+    if (config.has('display.greetings')) {
+      const greetings = config.get('display.greetings');
+      return greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    return 'hello';
+  }
+
+  // display a random goodbye when turning off the display
+  randomGoodbye() {
+    if (config.has('display.goodbyes')) {
+      const goodbyes = config.get('goodbyes');
+      return goodbyes[Math.floor(Math.random() * goodbyes.length)];
+    }
+
+    return 'goodbye';
   }
 }
