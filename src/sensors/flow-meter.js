@@ -1,7 +1,10 @@
 import HubSensor from 'sensors/hub-sensor';
 
+// threshold is to avoid slight movements in flow meter
 const threshold = 0.075;
 const msPerSecond = 1000;
+
+// TODO
 const calibration = 21.11338;
 
 /*
@@ -33,29 +36,30 @@ export default class FlowMeter extends HubSensor {
         this._flow = this._hertz / (60 * 7.5);
         let p = (this._flow * (this._clickDelta / msPerSecond)) * calibration;
         this._totalPour += p;
+        console.log(`${id} poured: ${this._totalPour}`);
         setTimeout(() => {
           let now = Date.now();
           console.log(`${id} last: ${this._lastPulse} now: ${now} poured: ${this._totalPour}`);
-          // if ((this._lastPulse - now) >= msPerSecond 
-          //   && this._totalPour > threshold
-          // ) {
-            // const message = `${id} poured: ${this._totalPour} oz`;
-            // super.report(message);
+          if ((now - this._lastPulse) >= msPerSecond 
+            && this._totalPour > threshold
+          ) {
+            const message = `${id} poured: ${this._totalPour} oz`;
+            super.report(message);
       
             // report to firebase
             // this.logPour(ounces);
       
             // write to display
-            // if (this._display && this._display.getIsOn()) {
-            //   this._display.write(message);
-            //   setTimeout(() => {
-            //     this._display.clear();
-            //   }, 500);
-            // }
+            if (this._display && this._display.getIsOn()) {
+              this._display.write(message);
+              setTimeout(() => {
+                this._display.clear();
+              }, 500);
+            }
             
             // reset
-            // this._totalPour = 0;
-          // }
+            this._totalPour = 0;
+          }
         }, 1000);
       }
       
