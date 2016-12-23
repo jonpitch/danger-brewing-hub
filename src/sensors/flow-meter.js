@@ -36,26 +36,26 @@ export default class FlowMeter extends HubSensor {
         setTimeout(() => {
           let now = Date.now();
           console.log(`${id} last: ${this._lastPulse} now: ${now} poured: ${this._totalPour}`);
-          if ((now - this._lastPulse) >= msPerSecond 
-            && this._totalPour > threshold
-          ) {
-            const message = `${id} poured: ${this._totalPour} oz`;
-            super.report(message);
+          // if ((this._lastPulse - now) >= msPerSecond 
+          //   && this._totalPour > threshold
+          // ) {
+            // const message = `${id} poured: ${this._totalPour} oz`;
+            // super.report(message);
       
             // report to firebase
             // this.logPour(ounces);
       
             // write to display
-            if (this._display && this._display.getIsOn()) {
-              this._display.write(message);
-              setTimeout(() => {
-                this._display.clear();
-              }, 500);
-            }
+            // if (this._display && this._display.getIsOn()) {
+            //   this._display.write(message);
+            //   setTimeout(() => {
+            //     this._display.clear();
+            //   }, 500);
+            // }
             
             // reset
-            this._totalPour = 0;
-          }
+            // this._totalPour = 0;
+          // }
         }, 1000);
       }
       
