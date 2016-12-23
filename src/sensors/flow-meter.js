@@ -19,11 +19,6 @@ export default class FlowMeter extends HubSensor {
     this._id = id;
     this._sensor = fiveSensor;
     this._display = display;
-    
-    
-    this._lastPulse = Date.now();
-    this._clickDelta = 0;
-    this._hertz = 0;
 
     // pulses per session - gets reset
     let sessionPulses = 0;
@@ -31,18 +26,32 @@ export default class FlowMeter extends HubSensor {
     // state of flow meter
     let isOpen = false;
 
+    this._lastPulse = Date.now();
+    this._hertz = 0;
+    this._flow = 0;
+    this._thisPour = 0;
+    this._totalPour = 0;
+    
     this._sensor.on('change', (value) => {
       if (!value) {
-        console.log('no value');
         return;
       }
-
+      
       sessionPulses++;
       isOpen = true;
       
       let currentTime = Date.now();
       this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
-      console.log(`id: ${id} - delta: ${this._clickDelta}`);
+      if (this._clickDelta < 1000) {
+          this._hertz = 1000 / this._clickDelta;
+          this._flow = this._hertz / (60 * 7.5);
+          let p = this._flow * (this._clickDelta / 1000);
+          this._thisPour += p;
+          this._totalPour += p;
+          console.log(`${id} poured: ${this._thisPour}`);
+      }
+      
+      this._lastPulse = currentTime;
 
       // let currentSession = sessionPulses;
       // setTimeout(() => {
