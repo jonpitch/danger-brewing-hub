@@ -37,18 +37,23 @@ export default class FlowMeter extends HubSensor {
         return;
       }
       
-      sessionPulses++;
-      isOpen = true;
+      // sessionPulses++;
+      // isOpen = true;
       
       let currentTime = Date.now();
       this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
       if (this._clickDelta < 1000) {
           this._hertz = 1000 / this._clickDelta;
           this._flow = this._hertz / (60 * 7.5);
-          let p = this._flow * (this._clickDelta / 1000);
+          let p = (this._flow * (this._clickDelta / 1000) * 25.11338);
           this._thisPour += p;
           this._totalPour += p;
           console.log(`${id} poured: ${this._thisPour}`);
+          setTimeout(() => {
+            if (this._lastPulse - Date.now() > 1000) {
+              console.log(`the pour was: ${this._thisPour}`);
+            }
+          }, 1000);
       }
       
       this._lastPulse = currentTime;
