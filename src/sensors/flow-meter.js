@@ -29,31 +29,34 @@ export default class FlowMeter extends HubSensor {
       let currentTime = Date.now();
       this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
       if (this._clickDelta < 1000) {
-          this._hertz = msPerSecond / this._clickDelta;
-          this._flow = this._hertz / (60 * 7.5);
-          let p = (this._flow * (this._clickDelta / msPerSecond)) * calibration;
-          this._totalPour += p;
-          setTimeout(() => {
-            let now = Date.now();
-            if (now - this._lastPulse >= msPerSecond && this._totalPour > threshold) {
-              const message = `${id} poured: ${this._totalPour} oz`;
-              super.report(message);
-        
-              // report to firebase
-              // this.logPour(ounces);
-        
-              // write to display
-              if (this._display && this._display.getIsOn()) {
-                this._display.write(message);
-                setTimeout(() => {
-                  this._display.clear();
-                }, 500);
-              }
-              
-              // reset
-              this._totalPour = 0;
+        this._hertz = msPerSecond / this._clickDelta;
+        this._flow = this._hertz / (60 * 7.5);
+        let p = (this._flow * (this._clickDelta / msPerSecond)) * calibration;
+        this._totalPour += p;
+        setTimeout(() => {
+          let now = Date.now();
+          console.log(`${id} last: ${this._lastPulse} now: ${now} poured: ${this._totalPour}`);
+          if ((now - this._lastPulse) >= msPerSecond 
+            && this._totalPour > threshold
+          ) {
+            const message = `${id} poured: ${this._totalPour} oz`;
+            super.report(message);
+      
+            // report to firebase
+            // this.logPour(ounces);
+      
+            // write to display
+            if (this._display && this._display.getIsOn()) {
+              this._display.write(message);
+              setTimeout(() => {
+                this._display.clear();
+              }, 500);
             }
-          }, 1000);
+            
+            // reset
+            this._totalPour = 0;
+          }
+        }, 1000);
       }
       
       this._lastPulse = currentTime;
