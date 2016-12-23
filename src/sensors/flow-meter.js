@@ -40,7 +40,7 @@ export default class FlowMeter extends HubSensor {
             super.report(message);
       
             // report to firebase
-            this.logPour(ounces);
+            this.logPour(this._totalPour);
       
             // write to display
             if (this._display && this._display.getIsOn()) {
