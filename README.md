@@ -50,7 +50,7 @@ It supports collecting data from:
     * Expand file system
     * Internationalization options - adjust as necessary.
     * Change your password - if you want
-    * `Advanced Options - Hostname` - chane the hostname of your Pi (optional)
+    * `Advanced Options - Hostname` - change the hostname of your Pi (optional)
     * `Advanced Options - Enable I2C`
     * `Advanced Options - Enable One-Wire`
     * `Advanced Options - Enable SSH`
