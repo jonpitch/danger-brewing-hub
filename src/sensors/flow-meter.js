@@ -4,11 +4,10 @@ import HubSensor from 'sensors/hub-sensor';
 const threshold = 0.075;
 const msPerSecond = 1000;
 
-// TODO
-const calibration = 21.11338;
+// an arbitrary adjustment value from flow to ounces
+const calibration = 24.11338;
 
 /*
-
 */
 export default class FlowMeter extends HubSensor {
 
@@ -25,22 +24,15 @@ export default class FlowMeter extends HubSensor {
     this._totalPour = 0;
     
     this._sensor.on('change', (value) => {
-      if (!value) {
-        console.log(`skipping ${id} value`);
-        return;
-      }
-      
       let currentTime = Date.now();
       this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
       if (this._clickDelta < 1000) {
         this._hertz = msPerSecond / this._clickDelta;
         this._flow = this._hertz / (60 * 7.5);
         let p = (this._flow * (this._clickDelta / msPerSecond)) * calibration;
-        this._totalPour += p;
-        console.log(`${id} poured: ${this._totalPour}`);
+        this._totalPour += Math.round(p * 100) / 100;
         setTimeout(() => {
           let now = Date.now();
-          console.log(`${id} last: ${this._lastPulse} now: ${now} poured: ${this._totalPour}`);
           if ((now - this._lastPulse) >= msPerSecond 
             && this._totalPour > threshold
           ) {
