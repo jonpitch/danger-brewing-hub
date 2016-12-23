@@ -1,15 +1,13 @@
 import HubSensor from 'sensors/hub-sensor';
 
-// the amount of ounces required to flow to consider a pour occurred
-const pourThreshold = 0.15;
+// threshold is to avoid slight movements in flow meter
+const threshold = 0.075;
+const msPerSecond = 1000;
 
-// may require calibration
-const pulsesPerLiter = 450;
-const ouncesPerLiter = 33.814;
-const pulsesPerOunce = 13.308;
+// an arbitrary adjustment value from flow to ounces
+const calibration = 20.11338;
 
 /*
-
 */
 export default class FlowMeter extends HubSensor {
 
@@ -20,31 +18,30 @@ export default class FlowMeter extends HubSensor {
     this._sensor = fiveSensor;
     this._display = display;
 
-    // total pulses from flow meter
-    let pulses = 0;
-
-    // pulses per session - gets reset
-    let sessionPulses = 0;
-
-    // state of flow meter
-    let isOpen = false;
-
-    this._sensor.on('change', () => {
-      pulses++;
-      sessionPulses++;
-      isOpen = true;
-
-      let currentSession = sessionPulses;
-      setTimeout(() => {
-        if (currentSession === sessionPulses) {
-          const ounces = Math.round((sessionPulses / pulsesPerOunce) * 100) / 100;
-          if (ounces > pourThreshold) {
-            const message = `${id} poured: ${ounces} oz`;
+    this._lastPulse = Date.now();
+    this._hertz = 0;
+    this._flow = 0;
+    this._totalPour = 0;
+    
+    this._sensor.on('change', (value) => {
+      let currentTime = Date.now();
+      this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
+      if (this._clickDelta < 1000) {
+        this._hertz = msPerSecond / this._clickDelta;
+        this._flow = this._hertz / (60 * 7.5);
+        let p = (this._flow * (this._clickDelta / msPerSecond)) * calibration;
+        this._totalPour += Math.round(p * 100) / 100;
+        setTimeout(() => {
+          let now = Date.now();
+          if ((now - this._lastPulse) >= msPerSecond 
+            && this._totalPour > threshold
+          ) {
+            const message = `${id} poured: ${this._totalPour} oz`;
             super.report(message);
-
+      
             // report to firebase
             this.logPour(ounces);
-
+      
             // write to display
             if (this._display && this._display.getIsOn()) {
               this._display.write(message);
@@ -52,13 +49,14 @@ export default class FlowMeter extends HubSensor {
                 this._display.clear();
               }, 500);
             }
-
-            // reset session
-            sessionPulses = 0;
-            isOpen = false;
+            
+            // reset
+            this._totalPour = 0;
           }
-        }
-      }, 1000);
+        }, 1000);
+      }
+      
+      this._lastPulse = currentTime;
     });
   }
 
