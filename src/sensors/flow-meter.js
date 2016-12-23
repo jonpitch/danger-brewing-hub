@@ -19,9 +19,11 @@ export default class FlowMeter extends HubSensor {
     this._id = id;
     this._sensor = fiveSensor;
     this._display = display;
-
-    // total pulses from flow meter
-    let pulses = 0;
+    
+    
+    this._lastPulse = Date.now();
+    this._clickDelta = 0;
+    this._hertz = 0;
 
     // pulses per session - gets reset
     let sessionPulses = 0;
@@ -29,36 +31,44 @@ export default class FlowMeter extends HubSensor {
     // state of flow meter
     let isOpen = false;
 
-    this._sensor.on('change', () => {
-      pulses++;
+    this._sensor.on('change', (value) => {
+      if (!value) {
+        console.log('no value');
+        return;
+      }
+
       sessionPulses++;
       isOpen = true;
+      
+      let currentTime = Date.now();
+      this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
+      console.log(`id: ${id} - delta: ${this._clickDelta}`);
 
-      let currentSession = sessionPulses;
-      setTimeout(() => {
-        if (currentSession === sessionPulses) {
-          const ounces = Math.round((sessionPulses / pulsesPerOunce) * 100) / 100;
-          if (ounces > pourThreshold) {
-            const message = `${id} poured: ${ounces} oz`;
-            super.report(message);
-
-            // report to firebase
-            this.logPour(ounces);
-
-            // write to display
-            if (this._display && this._display.getIsOn()) {
-              this._display.write(message);
-              setTimeout(() => {
-                this._display.clear();
-              }, 500);
-            }
-
-            // reset session
-            sessionPulses = 0;
-            isOpen = false;
-          }
-        }
-      }, 1000);
+      // let currentSession = sessionPulses;
+      // setTimeout(() => {
+      //   if (currentSession === sessionPulses) {
+      //     const ounces = Math.round((sessionPulses / pulsesPerOunce) * 100) / 100;
+      //     if (ounces > pourThreshold) {
+      //       const message = `${id} poured: ${ounces} oz`;
+      //       super.report(message);
+      // 
+      //       // report to firebase
+      //       this.logPour(ounces);
+      // 
+      //       // write to display
+      //       if (this._display && this._display.getIsOn()) {
+      //         this._display.write(message);
+      //         setTimeout(() => {
+      //           this._display.clear();
+      //         }, 500);
+      //       }
+      // 
+      //       // reset session
+      //       sessionPulses = 0;
+      //       isOpen = false;
+      //     }
+      //   }
+      // }, 1000);
     });
   }
 
