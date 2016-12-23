@@ -26,6 +26,7 @@ export default class FlowMeter extends HubSensor {
     
     this._sensor.on('change', (value) => {
       if (!value) {
+        console.log(`skipping ${id} value`);
         return;
       }
       
