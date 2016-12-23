@@ -5,7 +5,7 @@ const threshold = 0.075;
 const msPerSecond = 1000;
 
 // an arbitrary adjustment value from flow to ounces
-const calibration = 24.11338;
+const calibration = 20.11338;
 
 /*
 */
@@ -40,7 +40,7 @@ export default class FlowMeter extends HubSensor {
             super.report(message);
       
             // report to firebase
-            // this.logPour(ounces);
+            this.logPour(ounces);
       
             // write to display
             if (this._display && this._display.getIsOn()) {
