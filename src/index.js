@@ -72,10 +72,9 @@ board.on('ready', function() {
     }
 
     // setup display toggle - optional
-    let displayToggle = null;
     if (display && config.has('hub.display.toggle')) {
       const togglePin = config.get('hub.display.toggle');
-      displayToggle = new DisplayToggle(five, togglePin, display);
+      new DisplayToggle(five, togglePin, display);
     } else {
       console.warn('no display toggle configured.');
     }

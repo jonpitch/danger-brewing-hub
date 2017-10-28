@@ -23,7 +23,7 @@ export default class FlowMeter extends HubSensor {
     this._flow = 0;
     this._totalPour = 0;
     
-    this._sensor.on('change', (value) => {
+    this._sensor.on('change', () => {
       let currentTime = Date.now();
       this._clickDelta = Math.max([currentTime - this._lastPulse], 1);
       if (this._clickDelta < 1000) {

@@ -148,12 +148,15 @@ It supports collecting data from:
 ## Developers
 
 #### Building
-* `npm run build`
+* `npm run-script build`
 
 *Output is in `/lib`*
 
 #### Running
 * `./run.sh`
+
+#### Testing
+* `npm run-script test`
 
 #### Contributing
 * Feel free to help out. Take a look if there are any open [issues](https://github.com/jonpitch/danger-brewing-hub/issues), bugs or if you want to just make the danger-brewing-hub better, go for it!
